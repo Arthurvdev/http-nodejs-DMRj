@@ -1,48 +1,51 @@
 import { createServer } from 'http';
 import https from 'https';
 
-createServer((req, res) => {
-  const playerName = req.url.replace('/', '');
-  const apiKey = 'C2KZNXSHOPILAEPYOVH6';
-  const baseUrl = 'https://api.brawlhalla.com/rankings/1v1/brz/';
-  let page = 1;
-  let players = [];
+const apiKey = 'C2KZNXSHOPILAEPYOVH6';
+const playerName = 'player_name'; // Substitua por um nome de jogador válido
 
-  const fetchPlayers = () => {
-    const url = `${baseUrl}${page}?api_key=${apiKey}`;
+const searchForPlayer = (page) => {
+  const url = `https://api.brawlhalla.com/rankings/1v1/brz/${page}?api_key=${apiKey}`;
 
-    https.get(url, (apiRes) => {
+  return new Promise((resolve, reject) => {
+    https.get(url, (res) => {
       let data = '';
 
-      apiRes.on('data', (chunk) => {
+      res.on('data', (chunk) => {
         data += chunk;
       });
 
-      apiRes.on('end', () => {
-        const jsonData = JSON.parse(data);
+      res.on('end', () => {
+        const result = JSON.parse(data);
 
-        if (jsonData.hasOwnProperty('error')) {
-          res.writeHead(404);
-          res.write(`Error: ${jsonData.error}`);
-          res.end();
-        } else {
-          const foundPlayers = jsonData.filter(player => player.name === playerName);
-          players = players.concat(foundPlayers);
+        if (result.length > 0) {
+          const player = result.find((entry) => entry.name === playerName);
 
-          if (foundPlayers.length > 0) {
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-            res.writeHead(200, {'Content-Type': 'application/json'});
-            res.write(JSON.stringify(players));
-            res.end();
+          if (player) {
+            resolve(player);
           } else {
-            page++;
-            fetchPlayers();
+            resolve(searchForPlayer(page + 1));
           }
+        } else {
+          reject(new Error('No more pages to search'));
         }
       });
     });
-  };
+  });
+};
 
-  fetchPlayers();
+createServer((req, res) => {
+  searchForPlayer(1)
+    .then((player) => {
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      res.writeHead(200, {'Content-Type': 'application/json'});
+      res.write(JSON.stringify(player));
+      res.end();
+    })
+    .catch((err) => {
+      res.writeHead(500, {'Content-Type': 'text/plain'});
+      res.write(err.message);
+      res.end();
+    });
 }).listen(process.env.PORT);
