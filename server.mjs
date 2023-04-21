@@ -25,7 +25,7 @@ createServer((req, res) => {
       });
 
       apiRes.on('end', () => {
-        const jsonData = JSON.parse(data);
+        const jsonData = JSON.parse(data).brawlhalla;
 
         const playerData = jsonData.filter(row => row.name.toLowerCase() === playerName.toLowerCase());
 
