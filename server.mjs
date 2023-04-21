@@ -1,27 +1,31 @@
-https.get(url, options, (apiRes) => {
-  let data = '';
+import { createServer } from 'http';
+import https from 'https';
 
-  apiRes.on('data', (chunk) => {
-    data += chunk;
-  });
-
-  apiRes.on('end', () => {
-    try {
-      const parsedData = JSON.parse(data);
-      allData = [...allData, ...parsedData];
-    } catch (e) {
-      console.error(`Error parsing JSON: ${e.message}`);
+createServer((req, res) => {
+  const options = {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
     }
+  };
 
-    if (allData.length >= 500) {
+  for (let page = 1; page <= 500; page++) {
+    const url = `https://api.brawlhalla.com/rankings/1v1/brz/${page}?api_key=C2KZNXSHOPILAEPYOVH6`;
+  }
+
+  https.get(url, options, (apiRes) => {
+    let data = '';
+
+    apiRes.on('data', (chunk) => {
+      data += chunk;
+    });
+
+    apiRes.on('end', () => {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
       res.writeHead(200, {'Content-Type': 'application/json'});
-      res.write(JSON.stringify(allData));
+      res.write(data);
       res.end();
-    } else {
-      const nextUrl = `https://api.brawlhalla.com/rankings/1v1/brz/${pageNumber + 1}?api_key=C2KZNXSHOPILAEPYOVH6`;
-      fetchData(nextUrl, pageNumber + 1);
-    }
+    });
   });
-});
+}).listen(process.env.PORT);
