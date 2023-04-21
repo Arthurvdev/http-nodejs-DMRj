@@ -2,22 +2,16 @@ import { createServer } from 'http';
 import https from 'https';
 
 createServer((req, res) => {
-  const playerName = req.url.split('/')[1];
+  const playerName = req.url.replace('/', '');
+  const apiKey = 'C2KZNXSHOPILAEPYOVH6';
+  const baseUrl = 'https://api.brawlhalla.com/rankings/1v1/brz/';
+  let page = 1;
+  let players = [];
 
-  const options = {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json'
-    }
-  };
+  const fetchPlayers = () => {
+    const url = `${baseUrl}${page}?api_key=${apiKey}`;
 
-  let currentPage = 1;
-  let foundPlayer = false;
-
-  const fetchPlayerData = () => {
-    const url = `https://api.brawlhalla.com/rankings/1v1/brz/${currentPage}?api_key=C2KZNXSHOPILAEPYOVH6`;
-
-    https.get(url, options, (apiRes) => {
+    https.get(url, (apiRes) => {
       let data = '';
 
       apiRes.on('data', (chunk) => {
@@ -25,32 +19,30 @@ createServer((req, res) => {
       });
 
       apiRes.on('end', () => {
-        const jsonData = JSON.parse(data).brawlhalla;
+        const jsonData = JSON.parse(data);
 
-        const playerData = jsonData.filter(row => row.name.toLowerCase() === playerName.toLowerCase());
-
-        if (playerData.length > 0) {
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-          res.writeHead(200, {'Content-Type': 'application/json'});
-          res.write(JSON.stringify(playerData[0]));
+        if (jsonData.hasOwnProperty('error')) {
+          res.writeHead(404);
+          res.write(`Error: ${jsonData.error}`);
           res.end();
-          foundPlayer = true;
-        } else if (jsonData.length === 100 && !foundPlayer) {
-          currentPage++;
-          fetchPlayerData();
         } else {
-          res.setHeader('Access-Control-Allow-Origin', '*');
-          res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-          res.writeHead(404, {'Content-Type': 'application/json'});
-          res.write(JSON.stringify({ error: 'Jogador não encontrado' }));
-          res.end();
+          const foundPlayers = jsonData.filter(player => player.name === playerName);
+          players = players.concat(foundPlayers);
+
+          if (foundPlayers.length > 0) {
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+            res.writeHead(200, {'Content-Type': 'application/json'});
+            res.write(JSON.stringify(players));
+            res.end();
+          } else {
+            page++;
+            fetchPlayers();
+          }
         }
       });
-    }).on('error', (err) => {
-      console.error(err);
     });
   };
 
-  fetchPlayerData();
+  fetchPlayers();
 }).listen(process.env.PORT);
