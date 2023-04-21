@@ -9,8 +9,9 @@ createServer((req, res) => {
     }
   };
 
-  const url = 'https://api.brawlhalla.com/rankings/1v1/brz/1?api_key=C2KZNXSHOPILAEPYOVH6';
-
+  const playerName = document.getElementById('player-name').value;
+  const url = `https://api.brawlhalla.com/rankings/1v1/brz/1?name=${playerName}&api_key=C2KZNXSHOPILAEPYOVH6`;
+  
   https.get(url, options, (apiRes) => {
     let data = '';
 
