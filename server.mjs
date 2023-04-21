@@ -1,7 +1,11 @@
 import { createServer } from 'http';
 import https from 'https';
+import url from 'url';
 
 createServer((req, res) => {
+  const parsedUrl = url.parse(req.url, true);
+  const playerName = parsedUrl.query.playerName;
+  
   const options = {
     method: 'GET',
     headers: {
@@ -9,8 +13,8 @@ createServer((req, res) => {
     }
   };
 
-  const url = 'https://api.brawlhalla.com/rankings/1v1/brz/1?api_key=C2KZNXSHOPILAEPYOVH6';
-
+  const url = `https://api.brawlhalla.com/rankings/1v1/brz/1?name=${playerName}&api_key=C2KZNXSHOPILAEPYOVH6`;
+  
   https.get(url, options, (apiRes) => {
     let data = '';
 
