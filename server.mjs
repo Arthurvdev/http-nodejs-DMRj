@@ -9,9 +9,9 @@ createServer((req, res) => {
     }
   };
 
-  for (let page = 1; page <= 500; page++) {
-    const url = `https://api.brawlhalla.com/rankings/1v1/brz/${page}?api_key=C2KZNXSHOPILAEPYOVH6`;
-  }
+  
+  const url = `https://api.brawlhalla.com/rankings/1v1/brz/1?api_key=C2KZNXSHOPILAEPYOVH6`;
+  
 
   https.get(url, options, (apiRes) => {
     let data = '';
