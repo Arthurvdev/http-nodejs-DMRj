@@ -11,9 +11,9 @@ createServer((req, res) => {
 
   
   const url = `https://api.brawlhalla.com/rankings/1v1/brz/1?api_key=C2KZNXSHOPILAEPYOVH6`;
-  const url2 = `https://api.brawlhalla.com/rankings/1v1/brz/2?api_key=C2KZNXSHOPILAEPYOVH6`;
+  
 
-  https.get(url,url2, options, (apiRes) => {
+  https.get(url, options, (apiRes) => {
     let data = '';
 
     apiRes.on('data', (chunk) => {
